@@ -1,0 +1,60 @@
+2.1
+CREATE OR REPLACE VIEW q1 (country_name) AS
+SELECT DISTINCT name
+FROM countries
+WHERE continent = 'Africa'
+AND population > 100000000
+;
+
+2.2
+CREATE OR REPLACE VIEW q2 (continent , country_count) AS
+SELECT DISTINCT C.continent, COUNT(C.iso2)
+FROM countries C LEFT JOIN airports A
+ON C.iso2 = A.country_iso2
+WHERE A.code = NULL
+GROUP BY C.continent
+;
+
+2.3 *
+CREATE OR REPLACE VIEW q3 (country_name , border_count) AS
+SELECT DISTINCT C.name, COUNT(B.country2_iso2)
+FROM countries C JOIN borders B
+ON C.iso2 = B.country1_iso2
+GROUP BY C.name
+ORDER BY COUNT(B.country2_iso2) DESC
+LIMIT 10
+;
+
+2.4
+CREATE OR REPLACE VIEW q4 (country_name1 , country_name2) AS
+SELECT DISTINCT C1.name, C2.name
+FROM countries C1 JOIN borders B
+ON C1.iso2 = B.country1_iso2
+JOIN countries C2
+ON C2.iso2 = B.country2_iso2
+WHERE C1.continent = 'Europe' AND C2.continent = 'Asia'
+;
+
+2.5
+(错了，不能用Left join）
+
+CREATE OR REPLACE VIEW q5 (country_name) AS
+SELECT C.name
+FROM airports A LEFT JOIN routes R
+ON A.code = R.to_code
+JOIN countries C
+ON C.iso2 = A.country_iso2
+WHERE R.airline_code = 'SQ'
+AND C.continent = 'Asia'
+AND R.to_code = NULL
+;
+
+SELECT C.name
+FROM countries C
+WHERE C.continent = 'Asia'
+EXCEPT
+SELECT A.country_iso2
+FROM airports A JOIN routes R
+ON R.to_code = A.code
+WHERE R.airline_code = 'SQ'
+;

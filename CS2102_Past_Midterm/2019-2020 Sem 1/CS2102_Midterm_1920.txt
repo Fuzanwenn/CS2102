@@ -1,0 +1,79 @@
+Q1.
+CREATE VIEW qn1 (uname) AS
+SELECT DISTINCT uname
+FROM Customers
+WHERE uname LIKE 'A%'
+AND LENGTH(uname) >= 5
+;
+
+Q2.
+CREATE VIEW qn2 (uname, name) AS
+SELECT DISTINCT uname, name
+FROM Pet
+WHERE (atype = 'A' OR atype = 'B')
+AND diet = 'D1'
+;
+
+Q3.
+CREATE VIEW qn3 (uname) AS
+SELECT DISTINCT uname
+FROM Customers
+EXCEPT
+SELECT DISTINCT uname
+FROM CareTaker NATURAL JOIN PetOwner
+;
+
+Q4.
+CREATE VIEW qn4 (uname) AS
+SELECT DISTINCT pouname
+FROM Bid
+WHERE rating IS NULL
+AND is_win = TRUE
+;
+
+Q5.
+CREATE VIEW qn5 (p1uname, p2uname) AS
+SELECT DISTINCT P1.uname, P2.uname
+FROM Pet P1, Pet P2
+WHERE P1.uname <> P2.uname
+AND P1.atype = P2.atype
+AND P1.name < P2.name
+;
+
+Q6.
+CREATE VIEW qn6 (uname, num) AS
+SELECT DISTINCT W1.uname, COUNT(DISTINCT W2.uname)
+FROM Work W1 JOIN Work W2
+ON W1.area = W2.area
+WHERE W1.uname <> W2.uname
+GROUP BY W1.uname
+;
+
+Q7.
+(Cardinality / Double Negation)
+
+CREATE VIEW qn7 (pouname, ctuname) AS
+SELECT DISTINCT B.pouname, B.ctuname
+FROM Bid B
+GROUP BY B.pouname, B.ctuname
+HAVING COUNT(*) = (
+SELECT COUNT(*)
+FROM Availability A
+WHERE B.ctuname = A.uname)
+;
+
+Q8.
+CREATE VIEW qn8 (uname, area) AS
+SELECT DISTINCT O.uname, O.area
+FROM Offices O JOIN Work W
+ON O.area = W.area
+WHERE 3 <= (
+SELECT COUNT(O2.uname)
+FROM Offices O2
+WHERE O2.area <> W.area
+AND O2.uname = W.uname)
+AND O.uname NOT IN (
+SELECT W2.uname
+FROM Work W2
+WHERE O.area <> W.area)
+;

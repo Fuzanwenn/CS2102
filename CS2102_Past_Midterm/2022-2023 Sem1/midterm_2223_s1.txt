@@ -1,0 +1,66 @@
+Q1.
+CREATE OR REPLACE VIEW q1 ( num_subzones ) AS
+SELECT COUNT(name)
+FROM subzones
+WHERE area = 'bukit merah'
+AND population > 15000
+;
+
+Q2.
+CREATE OR REPLACE VIEW q2 ( area ) AS
+SELECT DISTINCT name
+FROM areas
+WHERE region = 'central'
+EXCEPT
+SELECT DISTINCT A.name
+FROM areas A JOIN subzones S
+ON A.name = S.area
+JOIN mrt_stations M
+ON S.name = M.subzone
+WHERE A.region = 'central'
+;
+
+Q3.
+不用JOIN areas
+
+CREATE OR REPLACE VIEW q3 ( area , num_stops ) AS
+SELECT DISTINCT A.name, COUNT(Stops.code)
+FROM mrt_stops Stops RIGHT JOIN mrt_stations Stations
+ON Stops.station = Stations.name
+RIGHT JOIN subzones S ON S.name = Stations.subzone
+RIGHT JOIN areas A ON A.name = S.area
+GROUP BY A.name
+ORDER BY COUNT(Stops.code) DESC
+LIMIT 3
+;
+
+Q4.
+三个table JOIN就完了，太复杂！
+
+CREATE OR REPLACE VIEW q4 ( mrt_station ) AS
+SELECT DISTINCT Stops.station
+FROM mrt_stops Stops
+WHERE Stops.line = 'ew'
+AND EXISTS (
+SELECT 1
+FROM mrt_connections Connection
+WHERE Connection.from_code = Stops.code
+AND Connection.to_code NOT IN (
+SELECT code
+FROM mrt_stops
+WHERE line = 'ew')
+)
+;
+
+Q5.
+不用JOIN areas
+
+CREATE OR REPLACE VIEW q5 ( area , num_lines ) AS
+SELECT DISTINCT A.name, COUNT(DISTINCT Stops.line)
+FROM areas A JOIN subzones S ON A.name = S.area
+JOIN mrt_stations Stations ON Stations.subzone = S.name
+JOIN mrt_stops Stops ON Stops.station = Stations.name
+GROUP BY A.name
+HAVING COUNT(DISTINCT Stops.line) >= 3
+ORDER BY COUNT(DISTINCT Stops.line) DESC
+;

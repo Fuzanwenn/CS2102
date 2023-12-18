@@ -1,0 +1,27 @@
+Q7.
+CREATE OR REPLACE VIEW q7 (code, name) AS
+SELECT DISTINCT code, name
+FROM Courses
+WHERE name LIKE 'Intro%'
+AND code LIKE '__1__'
+;
+
+Q8.
+CREATE OR REPLACE VIEW q8 (name, address, course_count) AS
+SELECT DISTINCT O.name, D.address, COUNT(DISTINCT O.code)
+FROM Offers O NATURAL JOIN Departments D
+WHERE O.sem = 2
+GROUP BY (O.name, D.address)
+HAVING COUNT(DISTINCT O.code) >= 4
+;
+
+Q9.
+CREATE OR REPLACE VIEW q9 (code, name, dept_count) AS
+SELECT DISTINCT H.code, F.name, COUNT(H.name)
+FROM Has H JOIN Faculties F
+ON H.code = F.code
+GROUP BY (H.code, F.name)
+ORDER BY COUNT(H.name) DESC,
+H.code ASC
+LIMIT 3
+;

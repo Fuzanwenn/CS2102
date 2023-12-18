@@ -1,0 +1,45 @@
+Q8.
+SELECT DISTINCT pid
+FROM Projects P JOIN Specializes S
+ON P.eid = S.eid
+GROUP BY P.pid
+HAVING COUNT(S.eid) > 0
+AND EXISTS (
+SELECT 1
+FROM Specializes S2
+WHERE P.eid = S2.eid
+AND S2.aid = '1')
+AND NOT EXISTS (
+SELECT 1
+FROM Specializes S3
+WHERE P.eid = S3.eid
+AND S3.aid = '2')
+;
+
+Q9.
+SELECT pid
+FROM Projects
+ORDER BY pbudget DESC
+OFFSET 1
+LIMIT 1;
+
+Q10.
+（如果只有一个project，答案是engineers who do not work on any project）
+SELECT DISTINCT W.eid
+FROM Works W
+GROUP BY W.eid
+HAVING COUNT(W.pid) + 1 = (
+SELECT COUNT(P.pid)
+FROM Projects P
+)
+UNION
+SELECT DISTINCT E.eid
+FROM Engineers E
+WHERE 1 = (
+SELECT COUNT(*)
+FROM Projects)
+AND 
+E.eid NOT IN (
+SELECT W.eid
+FROM Works W)
+;

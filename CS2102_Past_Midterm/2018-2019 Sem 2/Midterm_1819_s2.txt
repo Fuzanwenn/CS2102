@@ -1,0 +1,149 @@
+Q1.
+CREATE VIEW v1 (eid) AS
+SELECT DISTINCT eid
+FROM Works
+WHERE hours > 10
+;
+
+Q2.
+CREATE VIEW v2 (eid) AS
+SELECT DISTINCT eid
+FROM Specializes
+WHERE aid IN ('A', 'B')
+OR aid IN ('A', 'C')
+GROUP BY eid
+HAVING COUNT(aid) >= 2
+;
+
+Q3.
+CREATE VIEW v3 (eid) AS
+SELECT DISTINCT E.eid
+FROM Employees E JOIN Departments D
+ON E.did = D.did
+JOIN Offices O
+ON D.oid = O.oid
+WHERE O.address = 'A'
+;
+
+Q4.
+CREATE VIEW v4 (eid) AS
+SELECT DISTINCT eid
+FROM Managers
+EXCEPT
+SELECT DISTINCT eid
+FROM Projects
+;
+
+Q5.
+CREATE VIEW v5 (eid) AS
+SELECT DISTINCT W1.eid
+FROM Works W1
+WHERE NOT EXISTS (
+SELECT 1
+FROM Works W2
+WHERE W2.eid = W1.eid
+AND W2.hours > 1)
+GROUP BY W1.eid
+;
+
+Q6.
+CREATE VIEW v6 (eid, num) AS
+SELECT DISTINCT M.eid, COUNT(D.did)
+FROM Managers M LEFT JOIN Departments D
+ON M.eid = D.eid
+GROUP BY M.eid
+
+UNION
+
+SELECT DISTINCT E.eid, COUNT(P.pid)
+FROM Engineers E LEFT JOIN Projects P
+ON E.eid = P.eid
+GROUP BY E.eid
+
+UNION
+
+SELECT DISTINCT eid, 0
+FROM Employees
+WHERE eid NOT IN (
+SELECT DISTINCT eid
+FROM Managers
+UNION
+SELECT DISTINCT eid
+FROM Engineers
+)
+;
+
+Q7.
+CREATE VIEW v7 (pid, eid, eid2) AS
+SELECT P1.pid, P1.eid, P2.eid
+FROM Projects P1 JOIN Projects P2
+ON P1.pid = P2.pid
+WHERE P1.eid < P2.eid
+GROUP BY (P1.pid, P2.pid)
+HAVING COUNT(P1.eid) = 2
+;
+
+Q8.
+CREATE VIEW v8 (aid, num) AS
+SELECT DISTINCT A.aid, COUNT(DISTINCT E.did)
+FROM Areas A LEFT JOIN Specializes S
+ON A.aid = S.aid
+LEFT JOIN Employees E
+ON E.eid = S.eid
+GROUP BY A.aid
+;
+
+Q9.
+CREATE VIEW v9 (pid) AS
+SELECT DISTINCT W.pid
+FROM Works W JOIN Projects P
+ON W.pid = P.pid
+JOIN Employees E
+ON P.eid = E.eid
+JOIN Employees E2
+ON E.did = E2.did
+GROUP BY W.pid
+HAVING COUNT(W.eid) > COUNT(E2.eid)
+;
+
+Q10.
+CREATE VIEW v10 (eid) AS
+WITH EngineerManagedByM (engineer, manager) AS (
+SELECT DISTINCT En.eid, D.eid
+FROM Engineers En NATURAL JOIN Employees Em
+JOIN Departments D
+ON Em.did = D.did
+),
+EngineerSupervisedByM (engineer, manager) AS (
+SELECT DISTINCT W.eid, P.eid
+FROM Works W JOIN Projects P
+ON W.pid = P.pid
+)
+
+SELECT DISTINCT eid
+FROM Managers
+WHERE eid NOT IN (
+SELECT manager
+FROM EngineerManagedByM
+)
+
+UNION
+
+SELECT DISTINCT M.eid
+FROM Managers M
+WHERE (
+SELECT COUNT(DISTINCT Embm.engineer)
+FROM EngineerManagedByM Embm
+WHERE M.eid = Embm.manager
+AND NOT EXISTS (
+SELECT 1
+FROM EngineerSupervisedByM Esbm
+WHERE Embm.engineer = Esbm.engineer
+AND Embm.manager <> Esbm.manager)
+GROUP BY Embm.manager
+) = (
+SELECT COUNT(DISTINCT Embm.engineer)
+FROM EngineerManagedByM Embm
+WHERE M.eid = Embm.manager
+)
+;
